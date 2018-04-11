@@ -15,6 +15,10 @@ public class PointAnimation : MonoBehaviour
 
     ComputeBuffer pointBuffer;
     ComputeBuffer timesBuffer;
+    ComputeBuffer velocitiesBuffer;
+
+    float HOVER_SPEED = 0.1f;
+
     struct Point {
         public Vector3 position;
         public uint color;
@@ -22,10 +26,13 @@ public class PointAnimation : MonoBehaviour
 
     void OnDisable()
     {
-        if (pointBuffer != null)
-        {
+        if (pointBuffer != null) {
             pointBuffer.Release();
             pointBuffer = null;
+        }
+        if (velocitiesBuffer != null) {
+            velocitiesBuffer.Release();
+            velocitiesBuffer = null;
         }
         if (timesBuffer != null) {
             timesBuffer.Release();
@@ -46,15 +53,21 @@ public class PointAnimation : MonoBehaviour
                 timesBuffer.Release();
             }
             pointBuffer = new ComputeBuffer(sourceBuffer.count, PointCloudData.elementSize);
+            velocitiesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float) * 3);
 
-            Point[] startingPositions = new Point[sourceBuffer.count];
-            float[] times = new float[sourceBuffer.count];
-            for (int i = 0; i < sourceBuffer.count;) {
+            int count = sourceBuffer.count;
+            Point[] startingPositions = new Point[count];
+            Vector3[] velocities = new Vector3[count];
+            float[] times = new float[count];
+            for (int i = 0; i < count; ) {
                 // Generate random starting positions
                 startingPositions[i] = new Point {
                     position = new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(0, 150)),
                     color = 255
                 };
+
+                // Initialize velocity
+                velocities[i] = new Vector3(Random.Range(-HOVER_SPEED, HOVER_SPEED), Random.Range(-HOVER_SPEED, HOVER_SPEED), Random.Range(-HOVER_SPEED, HOVER_SPEED));
 
                 // Generate random completion times
                 float randomTime = Random.Range(2.0f, _param1);
@@ -64,6 +77,7 @@ public class PointAnimation : MonoBehaviour
             }
 
             pointBuffer.SetData(startingPositions);
+            velocitiesBuffer.SetData(velocities);
 
             timesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float), ComputeBufferType.Default);
             timesBuffer.SetData(times);
@@ -79,7 +93,9 @@ public class PointAnimation : MonoBehaviour
         _computeShader.SetFloat("Time", time);
         _computeShader.SetInt("PointCount", sourceBuffer.count);
 
+        _computeShader.SetBuffer(kernel, "Velocities", velocitiesBuffer);
         _computeShader.SetBuffer(kernel, "Times", timesBuffer);
+
         _computeShader.SetBuffer(kernel, "SourceBuffer", sourceBuffer);
         _computeShader.SetBuffer(kernel, "OutputBuffer", pointBuffer);
 

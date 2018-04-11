@@ -6,6 +6,7 @@
 StructuredBuffer<float4> SourceBuffer;
 StructuredBuffer<float> Times;
 RWStructuredBuffer<float4> OutputBuffer;
+RWStructuredBuffer<float3> Velocities;
 
 CBUFFER_START(Params)
     float Time;
@@ -19,25 +20,48 @@ CBUFFER_END
 void Main(uint id : SV_DispatchThreadID) {
     float4 target = SourceBuffer[id];
 	float3 position = OutputBuffer[id].xyz;
-    half3 color = PcxDecodeColor(asuint(target.w));
+	float3 velocity = Velocities[id];
 	float targetTime = Times[id];
 
-	if (Time < targetTime + Param3) {
-		float progress = (Time < Param3) ? 1 : ((targetTime - (Time - Param3)) / targetTime);
+	float3 acceleration = float3(0.0, 0.0, 0.0);
+	if (Time > Param3) {
+		float effectiveTime = Time - Param3;
 
-		float easeOut = (2 - progress) * progress;
-		float easeOutCubic = (--progress) * progress * progress + 1;
-		float easeIn = progress * progress;
-		//float easeInCubic = progress * progress * progress * progress;
-		//float easeLinear = progress;
-		//target.xyz *= max(1, (Param2 * easeOutCubic));
+		// Steering behavior
+		float3 desired = target.xyz - position;
+		float magnitude = sqrt(desired.x * desired.x + desired.y * desired.y + desired.z * desired.z);
+		float speed = 0.2;
+		if (effectiveTime < 1.5) {
+			// Bouncy ball of goodness not complete yet, small deacceleration
+			if (magnitude < 1) {
+				speed = (0.1 / 1) * magnitude;
+			}
+		} else {
+			// Deaccelerate incoming particles
+			if (magnitude < 6) {
+				speed = (0.07 / 5) * magnitude;
+			}
+		}
+		desired *= (speed / magnitude);
+		float3 steer = desired - velocity;
+		float steerMagnitude = sqrt(steer.x * steer.x + steer.y * steer.y + steer.z * steer.z);
+		if (steerMagnitude > 0.1) {
+			steer *= (0.01 / steerMagnitude);
+		}
+		acceleration += steer;
 	}
 
-	target.xyz = position;
+	// Position
+	float4 newPoint = float4(0.0, 0.0, 0.0, 0.0);
+	newPoint.xyz = position + velocity;
+	velocity += acceleration;
 
+	// Color
+	half3 color = PcxDecodeColor(asuint(target.w));
 	float l = length(target.xy);
 	color *= 1 + pow(abs(sin(l * 0.27 - Time * 1.1)), 20);
+	newPoint.w = asfloat(PcxEncodeColor(color));
 
-    target.w = asfloat(PcxEncodeColor(color));
-    OutputBuffer[id] = target;
+    OutputBuffer[id] = newPoint;
+	Velocities[id] = velocity;
 }
