@@ -13,15 +13,19 @@ public class PointAnimation : MonoBehaviour
     [SerializeField] float _param3;
     [SerializeField] float _param4;
 
-    ComputeBuffer _pointBuffer;
+    ComputeBuffer pointBuffer;
     ComputeBuffer timesBuffer;
+    struct Point {
+        public Vector3 position;
+        public uint color;
+    }
 
     void OnDisable()
     {
-        if (_pointBuffer != null)
+        if (pointBuffer != null)
         {
-            _pointBuffer.Release();
-            _pointBuffer = null;
+            pointBuffer.Release();
+            pointBuffer = null;
         }
         if (timesBuffer != null) {
             timesBuffer.Release();
@@ -35,21 +39,31 @@ public class PointAnimation : MonoBehaviour
 
         var sourceBuffer = _sourceData.computeBuffer;
 
-        if (_pointBuffer == null || _pointBuffer.count != sourceBuffer.count)
+        if (pointBuffer == null || pointBuffer.count != sourceBuffer.count)
         {
-            if (_pointBuffer != null) {
-                _pointBuffer.Release();
+            if (pointBuffer != null) {
+                pointBuffer.Release();
                 timesBuffer.Release();
             }
-            _pointBuffer = new ComputeBuffer(sourceBuffer.count, PointCloudData.elementSize);
+            pointBuffer = new ComputeBuffer(sourceBuffer.count, PointCloudData.elementSize);
 
+            Point[] startingPositions = new Point[sourceBuffer.count];
             float[] times = new float[sourceBuffer.count];
             for (int i = 0; i < sourceBuffer.count;) {
+                // Generate random starting positions
+                startingPositions[i] = new Point {
+                    position = new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(0, 150)),
+                    color = 255
+                };
+
+                // Generate random completion times
                 float randomTime = Random.Range(2.0f, _param1);
-                for (int j = 0; j < 50 && i < sourceBuffer.count; j++, i ++) {
+                for (int j = 0; j < 50 && i < sourceBuffer.count; j++, i++) {
                     times[i] = randomTime;
                 }
             }
+
+            pointBuffer.SetData(startingPositions);
 
             timesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float), ComputeBufferType.Default);
             timesBuffer.SetData(times);
@@ -67,10 +81,10 @@ public class PointAnimation : MonoBehaviour
 
         _computeShader.SetBuffer(kernel, "Times", timesBuffer);
         _computeShader.SetBuffer(kernel, "SourceBuffer", sourceBuffer);
-        _computeShader.SetBuffer(kernel, "OutputBuffer", _pointBuffer);
+        _computeShader.SetBuffer(kernel, "OutputBuffer", pointBuffer);
 
         _computeShader.Dispatch(kernel, sourceBuffer.count / 128, 1, 1);
 
-        GetComponent<PointCloudRenderer>().sourceBuffer = _pointBuffer;
+        GetComponent<PointCloudRenderer>().sourceBuffer = pointBuffer;
     }
 }

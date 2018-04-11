@@ -17,8 +17,9 @@ CBUFFER_END
 
 [numthreads(128, 1, 1)]
 void Main(uint id : SV_DispatchThreadID) {
-    float4 pt = SourceBuffer[id];
-    half3 color = PcxDecodeColor(asuint(pt.w));
+    float4 target = SourceBuffer[id];
+	float3 position = OutputBuffer[id].xyz;
+    half3 color = PcxDecodeColor(asuint(target.w));
 	float targetTime = Times[id];
 
 	if (Time < targetTime + Param3) {
@@ -29,12 +30,14 @@ void Main(uint id : SV_DispatchThreadID) {
 		float easeIn = progress * progress;
 		//float easeInCubic = progress * progress * progress * progress;
 		//float easeLinear = progress;
-		pt.xyz *= max(1, (Param2 * easeOutCubic));
+		//target.xyz *= max(1, (Param2 * easeOutCubic));
 	}
 
-	float l = length(pt.xy);
+	target.xyz = position;
+
+	float l = length(target.xy);
 	color *= 1 + pow(abs(sin(l * 0.27 - Time * 1.1)), 20);
 
-    pt.w = asfloat(PcxEncodeColor(color));
-    OutputBuffer[id] = pt;
+    target.w = asfloat(PcxEncodeColor(color));
+    OutputBuffer[id] = target;
 }
