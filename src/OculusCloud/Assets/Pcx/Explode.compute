@@ -1,0 +1,40 @@
+﻿#pragma kernel Main
+
+#include "HLSLSupport.cginc"
+#include "../Pcx/Shaders/Common.cginc"
+
+StructuredBuffer<float4> SourceBuffer;
+StructuredBuffer<float> Times;
+RWStructuredBuffer<float4> OutputBuffer;
+
+CBUFFER_START(Params)
+    float Time;
+	float Param1;
+	float Param2;
+	float Param3;
+	int PointCount;
+CBUFFER_END
+
+[numthreads(128, 1, 1)]
+void Main(uint id : SV_DispatchThreadID) {
+    float4 pt = SourceBuffer[id];
+    half3 color = PcxDecodeColor(asuint(pt.w));
+	float targetTime = Times[id];
+
+	if (Time < targetTime + Param3) {
+		float progress = (Time < Param3) ? 1 : ((targetTime - (Time - Param3)) / targetTime);
+
+		float easeOut = (2 - progress) * progress;
+		float easeOutCubic = (--progress) * progress * progress + 1;
+		float easeIn = progress * progress;
+		//float easeInCubic = progress * progress * progress * progress;
+		//float easeLinear = progress;
+		pt.xyz *= max(1, (Param2 * easeOutCubic));
+	}
+
+	float l = length(pt.xy);
+	color *= 1 + pow(abs(sin(l * 0.27 - Time * 1.1)), 20);
+
+    pt.w = asfloat(PcxEncodeColor(color));
+    OutputBuffer[id] = pt;
+}
