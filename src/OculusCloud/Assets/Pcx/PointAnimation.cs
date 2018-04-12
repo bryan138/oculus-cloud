@@ -17,7 +17,7 @@ public class PointAnimation : MonoBehaviour
     ComputeBuffer timesBuffer;
     ComputeBuffer velocitiesBuffer;
 
-    float HOVER_SPEED = 0.1f;
+    float HOVER_SPEED = 0.01f;
 
     struct Point {
         public Vector3 position;
@@ -54,6 +54,7 @@ public class PointAnimation : MonoBehaviour
             }
             pointBuffer = new ComputeBuffer(sourceBuffer.count, PointCloudData.elementSize);
             velocitiesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float) * 3);
+            timesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float), ComputeBufferType.Default);
 
             int count = sourceBuffer.count;
             Point[] startingPositions = new Point[count];
@@ -70,16 +71,14 @@ public class PointAnimation : MonoBehaviour
                 velocities[i] = new Vector3(Random.Range(-HOVER_SPEED, HOVER_SPEED), Random.Range(-HOVER_SPEED, HOVER_SPEED), Random.Range(-HOVER_SPEED, HOVER_SPEED));
 
                 // Generate random completion times
-                float randomTime = Random.Range(2.0f, _param1);
                 for (int j = 0; j < 50 && i < sourceBuffer.count; j++, i++) {
+                    float randomTime = Random.Range(1.0f, 10.0f);
                     times[i] = randomTime;
                 }
             }
 
             pointBuffer.SetData(startingPositions);
             velocitiesBuffer.SetData(velocities);
-
-            timesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float), ComputeBufferType.Default);
             timesBuffer.SetData(times);
         }
 

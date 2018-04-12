@@ -592,6 +592,10 @@ Prefab:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: f475be1300c391a41a4a92b748c41057, type: 3}
+      propertyPath: m_Name
+      value: Garden
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: f475be1300c391a41a4a92b748c41057, type: 3}
   m_IsPrefabParent: 0
@@ -687,9 +691,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _sourceData: {fileID: 11400002, guid: fc73adb7ac25e7a45b790e2e5737f355, type: 3}
   _computeShader: {fileID: 7200000, guid: 08279bffaa2adbc4593164f6d907a2a8, type: 3}
-  _param1: 0
-  _param2: 0
-  _param3: 0
+  _param1: 10
+  _param2: 50
+  _param3: 5
   _param4: 0
 --- !u!1 &1831851727 stripped
 GameObject:
@@ -708,9 +712,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _sourceData: {fileID: 11400002, guid: f475be1300c391a41a4a92b748c41057, type: 3}
   _computeShader: {fileID: 7200000, guid: 08279bffaa2adbc4593164f6d907a2a8, type: 3}
-  _param1: 5
+  _param1: 10
   _param2: 50
-  _param3: 5
+  _param3: 10
   _param4: 0
 --- !u!1 &1869403376
 GameObject:
@@ -744,7 +748,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: ca90e7d557f82b34883894c908b37404, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
