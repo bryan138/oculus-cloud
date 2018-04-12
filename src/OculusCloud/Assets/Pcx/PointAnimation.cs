@@ -12,10 +12,14 @@ public class PointAnimation : MonoBehaviour
     [SerializeField] float _param2;
     [SerializeField] float _param3;
     [SerializeField] float _param4;
+    
+    [SerializeField] GameObject leftHand;
+    [SerializeField] GameObject rightHand;
 
     ComputeBuffer pointBuffer;
-    ComputeBuffer timesBuffer;
     ComputeBuffer velocitiesBuffer;
+    ComputeBuffer timesBuffer;
+    ComputeBuffer handsBuffer;
 
     float HOVER_SPEED = 0.01f;
 
@@ -38,29 +42,34 @@ public class PointAnimation : MonoBehaviour
             timesBuffer.Release();
             timesBuffer = null;
         }
+        if (handsBuffer != null) {
+            handsBuffer.Release();
+            handsBuffer = null;
+        }
     }
 
-    void Update()
-    {
+    void Update() {
         if (_sourceData == null) return;
 
         var sourceBuffer = _sourceData.computeBuffer;
 
-        if (pointBuffer == null || pointBuffer.count != sourceBuffer.count)
-        {
+        if (pointBuffer == null || pointBuffer.count != sourceBuffer.count) {
             if (pointBuffer != null) {
                 pointBuffer.Release();
+                velocitiesBuffer.Release();
                 timesBuffer.Release();
+                handsBuffer.Release();
             }
             pointBuffer = new ComputeBuffer(sourceBuffer.count, PointCloudData.elementSize);
             velocitiesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float) * 3);
-            timesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float), ComputeBufferType.Default);
+            timesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float));
+            handsBuffer = new ComputeBuffer(8, sizeof(float));
 
             int count = sourceBuffer.count;
             Point[] startingPositions = new Point[count];
             Vector3[] velocities = new Vector3[count];
             float[] times = new float[count];
-            for (int i = 0; i < count; ) {
+            for (int i = 0; i < count;) {
                 // Generate random starting positions
                 startingPositions[i] = new Point {
                     position = new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(0, 150)),
@@ -82,6 +91,11 @@ public class PointAnimation : MonoBehaviour
             timesBuffer.SetData(times);
         }
 
+        Vector3 leftHandPosition = transform.InverseTransformPoint(leftHand.transform.position);
+        Vector3 rightHandPosition = transform.InverseTransformPoint(rightHand.transform.position);
+        float[] hands = { leftHandPosition.x, leftHandPosition.y, leftHandPosition.z, 1.0f, rightHandPosition.x, rightHandPosition.y, rightHandPosition.z, 1.0f };
+        handsBuffer.SetData(hands);
+
         var time = Application.isPlaying ? Time.time : 0;
         var kernel = _computeShader.FindKernel("Main");
 
@@ -94,6 +108,7 @@ public class PointAnimation : MonoBehaviour
 
         _computeShader.SetBuffer(kernel, "Velocities", velocitiesBuffer);
         _computeShader.SetBuffer(kernel, "Times", timesBuffer);
+        _computeShader.SetBuffer(kernel, "Hands", handsBuffer);
 
         _computeShader.SetBuffer(kernel, "SourceBuffer", sourceBuffer);
         _computeShader.SetBuffer(kernel, "OutputBuffer", pointBuffer);

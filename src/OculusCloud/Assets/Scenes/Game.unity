@@ -714,7 +714,7 @@ MonoBehaviour:
   _computeShader: {fileID: 7200000, guid: 08279bffaa2adbc4593164f6d907a2a8, type: 3}
   _param1: 10
   _param2: 50
-  _param3: 10
+  _param3: 5
   _param4: 0
 --- !u!1 &1869403376
 GameObject:

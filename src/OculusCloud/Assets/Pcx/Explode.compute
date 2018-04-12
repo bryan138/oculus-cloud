@@ -4,9 +4,11 @@
 #include "../Pcx/Shaders/Common.cginc"
 
 StructuredBuffer<float4> SourceBuffer;
-StructuredBuffer<float> Times;
 RWStructuredBuffer<float4> OutputBuffer;
+
 RWStructuredBuffer<float3> Velocities;
+StructuredBuffer<float> Times;
+StructuredBuffer<float> Hands;
 
 CBUFFER_START(Params)
     float Time;
@@ -16,19 +18,28 @@ CBUFFER_START(Params)
 	int PointCount;
 CBUFFER_END
 
+float getMagnitude(float3 vec) {
+	return sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+}
 
 [numthreads(128, 1, 1)]
 void Main(uint id : SV_DispatchThreadID) {
-    float4 target = SourceBuffer[id];
+	float STARRY_NIGHT = 1.0;
+
+    float3 target = SourceBuffer[id].xyz;
 	float3 position = OutputBuffer[id].xyz;
 	float3 velocity = Velocities[id];
 	float targetTime = Times[id];
+
+	float3 leftHand = float3(Hands[0], Hands[1], Hands[2]);
+	float leftRadius = Hands[3];
+	float3 rightHand = float3(Hands[4], Hands[5], Hands[6]);
+	float rightRadius = Hands[7];
 
 	float4 newPoint = float4(0.0, 0.0, 0.0, 0.0);
 	float3 acceleration = float3(0.0, 0.0, 0.0);
 	if (Time > Param3) {
 		float effectiveTime = Time - Param3;
-		float STARRY_NIGHT = 10.0;
 		if (effectiveTime < STARRY_NIGHT) {
 			half color = (effectiveTime > targetTime) ? 255 : 0;
 			newPoint.w = asfloat(PcxEncodeColor(half3(color, color, color) * 0xff * 16 / (255 * 255)));
@@ -37,8 +48,8 @@ void Main(uint id : SV_DispatchThreadID) {
 			effectiveTime -= STARRY_NIGHT;
 
 			// Steering behavior
-			float3 desired = target.xyz - position;
-			float magnitude = sqrt(desired.x * desired.x + desired.y * desired.y + desired.z * desired.z);
+			float3 desired = target - position;
+			float magnitude = getMagnitude(desired);
 			float speed = 0.2;
 			if (effectiveTime < 1.5) {
 				// Bouncy ball of goodness not complete yet, small deacceleration
@@ -54,15 +65,44 @@ void Main(uint id : SV_DispatchThreadID) {
 			}
 			desired *= (speed / magnitude);
 			float3 steer = desired - velocity;
-			float steerMagnitude = sqrt(steer.x * steer.x + steer.y * steer.y + steer.z * steer.z);
+			float steerMagnitude = getMagnitude(steer);
 			if (steerMagnitude > 0.1) {
 				steer *= (0.01 / steerMagnitude);
 			}
 			acceleration += steer;
 
+			// Left hand
+			desired = leftHand - position;
+			magnitude = getMagnitude(desired);
+			if (magnitude < leftRadius) {
+				speed = 0.1;
+				desired *= (speed / magnitude);
+				steer = desired - velocity;
+				steerMagnitude = getMagnitude(steer);
+				if (steerMagnitude > 0.1) {
+					steer *= (0.01 / steerMagnitude);
+				}
+				acceleration += steer;
+			}
+
+			// Right hand
+			desired = rightHand - position;
+			magnitude = getMagnitude(desired);
+			if (magnitude < rightRadius) {
+				speed = 0.1;
+				desired *= (speed / magnitude);
+				desired *= -1;
+				steer = desired - velocity;
+				steerMagnitude = getMagnitude(steer);
+				if (steerMagnitude > 0.1) {
+					steer *= (0.1 / steerMagnitude);
+				}
+				acceleration += steer;
+			}
+
 			// Color
-			half3 color = PcxDecodeColor(asuint(target.w));
-			float l = length(target.xy);
+			half3 color = PcxDecodeColor(asuint(SourceBuffer[id].w));
+			float l = length(SourceBuffer[id].xy);
 			color *= 1 + pow(abs(sin(l * 0.27 - Time * 1.1)), 20);
 			newPoint.w = asfloat(PcxEncodeColor(color));
 		}
