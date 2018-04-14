@@ -11,12 +11,11 @@ StructuredBuffer<float> Times;
 StructuredBuffer<float> Hands;
 
 CBUFFER_START(Params)
-    float Time;
-	float Param1;
-	float Param2;
-	float Param3;
-	int PointCount;
-	float Scale;
+	float BLACK_VOID;
+	float STARRY_NIGHT;
+
+	float time;
+	float scale;
 CBUFFER_END
 
 float getMagnitude(float3 vec) {
@@ -25,8 +24,6 @@ float getMagnitude(float3 vec) {
 
 [numthreads(128, 1, 1)]
 void Main(uint id : SV_DispatchThreadID) {
-	float STARRY_NIGHT = 10.0;
-
     float3 target = SourceBuffer[id].xyz;
 	float3 position = OutputBuffer[id].xyz;
 	float3 velocity = Velocities[id];
@@ -39,8 +36,8 @@ void Main(uint id : SV_DispatchThreadID) {
 
 	float4 newPoint = float4(0.0, 0.0, 0.0, 0.0);
 	float3 acceleration = float3(0.0, 0.0, 0.0);
-	if (Time > Param3) {
-		float effectiveTime = Time - Param3;
+	if (time > BLACK_VOID) {
+		float effectiveTime = time - BLACK_VOID;
 		if (effectiveTime < STARRY_NIGHT) {
 			half color = (effectiveTime > targetTime) ? 255 : 0;
 			newPoint.w = asfloat(PcxEncodeColor(half3(color, color, color) * 0xff * 16 / (255 * 255)));
@@ -104,7 +101,7 @@ void Main(uint id : SV_DispatchThreadID) {
 			// Color
 			half3 color = PcxDecodeColor(asuint(SourceBuffer[id].w));
 			float l = length(SourceBuffer[id].xy);
-			color *= 1 + pow(abs(sin(l * 0.27 - Time * 1.1)), 20);
+			color *= 1 + pow(abs(sin(l * 0.27 - time * 1.1)), 20);
 			newPoint.w = asfloat(PcxEncodeColor(color));
 		}
 

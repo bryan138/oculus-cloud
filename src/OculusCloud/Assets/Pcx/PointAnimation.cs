@@ -7,11 +7,6 @@ public class PointAnimation : MonoBehaviour
 {
     [SerializeField] PointCloudData _sourceData;
     [SerializeField] ComputeShader _computeShader;
-
-    [SerializeField] float _param1;
-    [SerializeField] float _param2;
-    [SerializeField] float _param3;
-    [SerializeField] float _param4;
     
     [SerializeField] GameObject leftHand;
     [SerializeField] GameObject rightHand;
@@ -22,6 +17,8 @@ public class PointAnimation : MonoBehaviour
     ComputeBuffer handsBuffer;
 
     float HOVER_SPEED = 0.01f;
+    float BLACK_VOID = 3.0f;
+    float STARRY_NIGHT = 10.0f;
 
     struct Point {
         public Vector3 position;
@@ -104,13 +101,10 @@ public class PointAnimation : MonoBehaviour
         var time = Application.isPlaying ? Time.time : 0;
         var kernel = _computeShader.FindKernel("Main");
 
-        _computeShader.SetFloat("Param1", _param1);
-        _computeShader.SetFloat("Param2", _param2);
-        _computeShader.SetFloat("Param3", _param3);
-        _computeShader.SetFloat("Param4", _param4);
-        _computeShader.SetFloat("Time", time);
-        _computeShader.SetFloat("Scale", scale);
-        _computeShader.SetInt("PointCount", sourceBuffer.count);
+        _computeShader.SetFloat("BLACK_VOID", BLACK_VOID);
+        _computeShader.SetFloat("STARRY_NIGHT", STARRY_NIGHT);
+        _computeShader.SetFloat("time", time);
+        _computeShader.SetFloat("scale", scale);
 
         _computeShader.SetBuffer(kernel, "Velocities", velocitiesBuffer);
         _computeShader.SetBuffer(kernel, "Times", timesBuffer);
