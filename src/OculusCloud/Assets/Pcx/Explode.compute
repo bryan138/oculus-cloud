@@ -73,7 +73,7 @@ void Main(uint id : SV_DispatchThreadID) {
 			// Left hand
 			desired = leftHand - position;
 			magnitude = getMagnitude(desired);
-			if (magnitude < leftRadius) {
+			if (magnitude < leftRadius && leftForce > 0) {
 				speed = leftForce;
 				desired *= (speed / magnitude);
 				steer = desired - velocity;
@@ -87,7 +87,7 @@ void Main(uint id : SV_DispatchThreadID) {
 			// Right hand
 			desired = rightHand - position;
 			magnitude = getMagnitude(desired);
-			if (magnitude < rightRadius) {
+			if (magnitude < rightRadius && rightForce > 0) {
 				speed = rightForce;
 				desired *= (speed / magnitude);
 				desired *= -1;

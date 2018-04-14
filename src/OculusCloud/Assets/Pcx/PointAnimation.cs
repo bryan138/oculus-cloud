@@ -10,6 +10,8 @@ public class PointAnimation : MonoBehaviour
     
     [SerializeField] GameObject leftHand;
     [SerializeField] GameObject rightHand;
+    [SerializeField] GameObject leftHandSphere;
+    [SerializeField] GameObject rightHandSphere;
 
     ComputeBuffer pointBuffer;
     ComputeBuffer velocitiesBuffer;
@@ -19,6 +21,7 @@ public class PointAnimation : MonoBehaviour
     float HOVER_SPEED = 0.01f;
     float BLACK_VOID = 4.0f;
     float STARRY_NIGHT = 1.0f;
+    float HAND_SPHERE_STEP = 0.015f;
 
     struct Point {
         public Vector3 position;
@@ -92,16 +95,50 @@ public class PointAnimation : MonoBehaviour
             timesBuffer.SetData(times);
         }
 
+        float leftHandRadius = leftHandSphere.transform.localScale.x;
+        float rightHandRadius = rightHandSphere.transform.localScale.x;
+        bool leftChanged = false;
+        bool rightChanged = false;
+        if (OVRInput.Get(OVRInput.RawButton.Y)) {
+            leftChanged = true;
+            leftHandRadius += HAND_SPHERE_STEP;
+        } else if (OVRInput.Get(OVRInput.RawButton.X)) {
+            leftChanged = true;
+            leftHandRadius = Mathf.Max(0.1f, leftHandRadius - HAND_SPHERE_STEP);
+        }
+        if (OVRInput.Get(OVRInput.RawButton.B)) {
+            rightChanged = true;
+            rightHandRadius += HAND_SPHERE_STEP;
+        } else if (OVRInput.Get(OVRInput.RawButton.A)) {
+            rightChanged = true;
+            rightHandRadius = Mathf.Max(0.1f, rightHandRadius - HAND_SPHERE_STEP);
+        }
+
+        if (leftChanged) {
+            leftHandSphere.SetActive(true);
+            leftHandSphere.transform.localScale = new Vector3(leftHandRadius, leftHandRadius, leftHandRadius);
+        } else {
+            leftHandSphere.SetActive(false);
+        }
+        if (rightChanged) {
+            rightHandSphere.SetActive(true);
+            rightHandSphere.transform.localScale = new Vector3(rightHandRadius, rightHandRadius, rightHandRadius);
+        } else {
+            rightHandSphere.SetActive(false);
+        }
+
+        leftHandRadius /= 2.0f;
+        rightHandRadius /= 2.0f;
+
         float leftTrigger = OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger);
         float rightTrigger = OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger);
         float leftForce = leftTrigger * 0.2f * scaleFactor;
         float rightForce = rightTrigger * 0.2f * scaleFactor;
 
         // Compose hand info buffer
-        float handFieldRadius = scaleFactor * 0.15f;
         Vector3 leftHandPosition = transform.InverseTransformPoint(leftHand.transform.position);
         Vector3 rightHandPosition = transform.InverseTransformPoint(rightHand.transform.position);
-        float[] hands = { leftHandPosition.x, leftHandPosition.y, leftHandPosition.z, handFieldRadius, leftForce, rightHandPosition.x, rightHandPosition.y, rightHandPosition.z, handFieldRadius, rightForce };
+        float[] hands = { leftHandPosition.x, leftHandPosition.y, leftHandPosition.z, leftHandRadius, leftForce, rightHandPosition.x, rightHandPosition.y, rightHandPosition.z, rightHandRadius, rightForce };
         handsBuffer.SetData(hands);
 
         var time = Application.isPlaying ? Time.time : 0;
