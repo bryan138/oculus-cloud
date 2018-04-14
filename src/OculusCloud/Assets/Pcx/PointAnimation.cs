@@ -53,6 +53,10 @@ public class PointAnimation : MonoBehaviour
 
         var sourceBuffer = _sourceData.computeBuffer;
 
+        float scale = gameObject.transform.localScale.x;
+        float scaleFactor = 1.0f / scale;
+        float explodingRange = scaleFactor * 15;
+
         if (pointBuffer == null || pointBuffer.count != sourceBuffer.count) {
             if (pointBuffer != null) {
                 pointBuffer.Release();
@@ -72,7 +76,7 @@ public class PointAnimation : MonoBehaviour
             for (int i = 0; i < count;) {
                 // Generate random starting positions
                 startingPositions[i] = new Point {
-                    position = new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(0, 150)),
+                    position = new Vector3(Random.Range(-explodingRange, explodingRange), Random.Range(-explodingRange, explodingRange), Random.Range(0, explodingRange * 2)),
                     color = 255
                 };
 
@@ -91,9 +95,10 @@ public class PointAnimation : MonoBehaviour
             timesBuffer.SetData(times);
         }
 
+        float handFieldRadius = scaleFactor * 0.15f;
         Vector3 leftHandPosition = transform.InverseTransformPoint(leftHand.transform.position);
         Vector3 rightHandPosition = transform.InverseTransformPoint(rightHand.transform.position);
-        float[] hands = { leftHandPosition.x, leftHandPosition.y, leftHandPosition.z, 1.0f, rightHandPosition.x, rightHandPosition.y, rightHandPosition.z, 1.0f };
+        float[] hands = { leftHandPosition.x, leftHandPosition.y, leftHandPosition.z, handFieldRadius, rightHandPosition.x, rightHandPosition.y, rightHandPosition.z, handFieldRadius };
         handsBuffer.SetData(hands);
 
         var time = Application.isPlaying ? Time.time : 0;
@@ -104,6 +109,7 @@ public class PointAnimation : MonoBehaviour
         _computeShader.SetFloat("Param3", _param3);
         _computeShader.SetFloat("Param4", _param4);
         _computeShader.SetFloat("Time", time);
+        _computeShader.SetFloat("Scale", scale);
         _computeShader.SetInt("PointCount", sourceBuffer.count);
 
         _computeShader.SetBuffer(kernel, "Velocities", velocitiesBuffer);

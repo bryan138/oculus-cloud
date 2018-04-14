@@ -16,6 +16,7 @@ CBUFFER_START(Params)
 	float Param2;
 	float Param3;
 	int PointCount;
+	float Scale;
 CBUFFER_END
 
 float getMagnitude(float3 vec) {
@@ -24,7 +25,7 @@ float getMagnitude(float3 vec) {
 
 [numthreads(128, 1, 1)]
 void Main(uint id : SV_DispatchThreadID) {
-	float STARRY_NIGHT = 1.0;
+	float STARRY_NIGHT = 10.0;
 
     float3 target = SourceBuffer[id].xyz;
 	float3 position = OutputBuffer[id].xyz;
