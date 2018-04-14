@@ -17,8 +17,8 @@ public class PointAnimation : MonoBehaviour
     ComputeBuffer handsBuffer;
 
     float HOVER_SPEED = 0.01f;
-    float BLACK_VOID = 3.0f;
-    float STARRY_NIGHT = 10.0f;
+    float BLACK_VOID = 4.0f;
+    float STARRY_NIGHT = 1.0f;
 
     struct Point {
         public Vector3 position;
@@ -64,7 +64,7 @@ public class PointAnimation : MonoBehaviour
             pointBuffer = new ComputeBuffer(sourceBuffer.count, PointCloudData.elementSize);
             velocitiesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float) * 3);
             timesBuffer = new ComputeBuffer(sourceBuffer.count, sizeof(float));
-            handsBuffer = new ComputeBuffer(8, sizeof(float));
+            handsBuffer = new ComputeBuffer(10, sizeof(float));
 
             int count = sourceBuffer.count;
             Point[] startingPositions = new Point[count];
@@ -82,7 +82,7 @@ public class PointAnimation : MonoBehaviour
 
                 // Generate random completion times
                 for (int j = 0; j < 50 && i < sourceBuffer.count; j++, i++) {
-                    float randomTime = Random.Range(1.0f, 10.0f);
+                    float randomTime = Random.Range(0.0f, STARRY_NIGHT);
                     times[i] = randomTime;
                 }
             }
@@ -92,10 +92,16 @@ public class PointAnimation : MonoBehaviour
             timesBuffer.SetData(times);
         }
 
+        float leftTrigger = OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger);
+        float rightTrigger = OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger);
+        float leftForce = leftTrigger * 0.2f * scaleFactor;
+        float rightForce = rightTrigger * 0.2f * scaleFactor;
+
+        // Compose hand info buffer
         float handFieldRadius = scaleFactor * 0.15f;
         Vector3 leftHandPosition = transform.InverseTransformPoint(leftHand.transform.position);
         Vector3 rightHandPosition = transform.InverseTransformPoint(rightHand.transform.position);
-        float[] hands = { leftHandPosition.x, leftHandPosition.y, leftHandPosition.z, handFieldRadius, rightHandPosition.x, rightHandPosition.y, rightHandPosition.z, handFieldRadius };
+        float[] hands = { leftHandPosition.x, leftHandPosition.y, leftHandPosition.z, handFieldRadius, leftForce, rightHandPosition.x, rightHandPosition.y, rightHandPosition.z, handFieldRadius, rightForce };
         handsBuffer.SetData(hands);
 
         var time = Application.isPlaying ? Time.time : 0;

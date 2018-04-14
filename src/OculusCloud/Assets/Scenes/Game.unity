@@ -154,7 +154,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1185129060711086, guid: a39c1782854c478498312a67fc811459, type: 2}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114344339264518426, guid: a39c1782854c478498312a67fc811459,
         type: 2}
@@ -491,7 +491,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: f475be1300c391a41a4a92b748c41057, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: f475be1300c391a41a4a92b748c41057, type: 3}
       propertyPath: m_Name
@@ -517,10 +517,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _sourceData: {fileID: 11400002, guid: 576280c9a8a16054bbca7749701a37a2, type: 3}
   _computeShader: {fileID: 7200000, guid: 08279bffaa2adbc4593164f6d907a2a8, type: 3}
-  _param1: 8
-  _param2: 40
-  _param3: 4
-  _param4: 0
   leftHand: {fileID: 0}
   rightHand: {fileID: 0}
 --- !u!1001 &1732516544
@@ -594,10 +590,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _sourceData: {fileID: 11400002, guid: fc73adb7ac25e7a45b790e2e5737f355, type: 3}
   _computeShader: {fileID: 7200000, guid: 08279bffaa2adbc4593164f6d907a2a8, type: 3}
-  _param1: 10
-  _param2: 50
-  _param3: 5
-  _param4: 0
   leftHand: {fileID: 0}
   rightHand: {fileID: 0}
 --- !u!1 &1831851727 stripped
@@ -617,10 +609,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _sourceData: {fileID: 11400002, guid: f475be1300c391a41a4a92b748c41057, type: 3}
   _computeShader: {fileID: 7200000, guid: 08279bffaa2adbc4593164f6d907a2a8, type: 3}
-  _param1: 10
-  _param2: 50
-  _param3: 5
-  _param4: 0
   leftHand: {fileID: 2008854787}
   rightHand: {fileID: 2008854786}
 --- !u!1 &1869403376
