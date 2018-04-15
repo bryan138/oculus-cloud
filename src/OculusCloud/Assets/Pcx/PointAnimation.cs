@@ -21,7 +21,7 @@ public class PointAnimation : MonoBehaviour
     float HOVER_SPEED = 0.003f;
     float BLACK_VOID = 5.0f;
     float STARRY_NIGHT = 10.0f;
-    float HAND_SPHERE_STEP = 0.025f;
+    float HAND_SPHERE_STEP = 0.02f;
     bool SHOW_SPHERES = true;
 
     struct Point {
