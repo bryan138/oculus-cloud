@@ -19,9 +19,9 @@ public class PointAnimation : MonoBehaviour
     ComputeBuffer handsBuffer;
 
     float HOVER_SPEED = 0.003f;
-    float BLACK_VOID = 4.0f;
-    float STARRY_NIGHT = 2.0f;
-    float HAND_SPHERE_STEP = 0.015f;
+    float BLACK_VOID = 5.0f;
+    float STARRY_NIGHT = 10.0f;
+    float HAND_SPHERE_STEP = 0.025f;
     bool SHOW_SPHERES = true;
 
     struct Point {
@@ -56,7 +56,7 @@ public class PointAnimation : MonoBehaviour
 
         float scale = gameObject.transform.localScale.x;
         float scaleFactor = 1.0f / scale;
-        float explodingRange = scaleFactor * 25;
+        float explodingRange = scaleFactor * 15;
 
         if (pointBuffer == null || pointBuffer.count != sourceBuffer.count) {
             if (pointBuffer != null) {
