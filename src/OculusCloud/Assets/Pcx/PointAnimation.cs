@@ -22,6 +22,7 @@ public class PointAnimation : MonoBehaviour
     float BLACK_VOID = 4.0f;
     float STARRY_NIGHT = 1.0f;
     float HAND_SPHERE_STEP = 0.015f;
+    bool SHOW_SPHERES = false;
 
     struct Point {
         public Vector3 position;
@@ -95,47 +96,16 @@ public class PointAnimation : MonoBehaviour
             timesBuffer.SetData(times);
         }
 
-        float leftHandRadius = leftHandSphere.transform.localScale.x;
-        float rightHandRadius = rightHandSphere.transform.localScale.x;
-        bool leftChanged = false;
-        bool rightChanged = false;
-        if (OVRInput.Get(OVRInput.RawButton.Y)) {
-            leftChanged = true;
-            leftHandRadius += HAND_SPHERE_STEP;
-        } else if (OVRInput.Get(OVRInput.RawButton.X)) {
-            leftChanged = true;
-            leftHandRadius = Mathf.Max(0.1f, leftHandRadius - HAND_SPHERE_STEP);
-        }
-        if (OVRInput.Get(OVRInput.RawButton.B)) {
-            rightChanged = true;
-            rightHandRadius += HAND_SPHERE_STEP;
-        } else if (OVRInput.Get(OVRInput.RawButton.A)) {
-            rightChanged = true;
-            rightHandRadius = Mathf.Max(0.1f, rightHandRadius - HAND_SPHERE_STEP);
-        }
-
-        if (leftChanged) {
-            leftHandSphere.SetActive(true);
-            leftHandSphere.transform.localScale = new Vector3(leftHandRadius, leftHandRadius, leftHandRadius);
-        } else {
-            leftHandSphere.SetActive(false);
-        }
-        if (rightChanged) {
-            rightHandSphere.SetActive(true);
-            rightHandSphere.transform.localScale = new Vector3(rightHandRadius, rightHandRadius, rightHandRadius);
-        } else {
-            rightHandSphere.SetActive(false);
-        }
-
-        leftHandRadius /= 2.0f;
-        rightHandRadius /= 2.0f;
-
+        // Get oculus touch input data
         float leftTrigger = OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger);
         float rightTrigger = OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger);
         float leftForce = leftTrigger * 0.2f * scaleFactor;
         float rightForce = rightTrigger * 0.2f * scaleFactor;
 
-        // Compose hand info buffer
+        float leftHandRadius = processHandSphere(leftHandSphere, true);
+        float rightHandRadius = processHandSphere(rightHandSphere, false);
+
+        // Compose hand data buffer
         Vector3 leftHandPosition = transform.InverseTransformPoint(leftHand.transform.position);
         Vector3 rightHandPosition = transform.InverseTransformPoint(rightHand.transform.position);
         float[] hands = { leftHandPosition.x, leftHandPosition.y, leftHandPosition.z, leftHandRadius, leftForce, rightHandPosition.x, rightHandPosition.y, rightHandPosition.z, rightHandRadius, rightForce };
@@ -159,5 +129,27 @@ public class PointAnimation : MonoBehaviour
         _computeShader.Dispatch(kernel, sourceBuffer.count / 128, 1, 1);
 
         GetComponent<PointCloudRenderer>().sourceBuffer = pointBuffer;
+    }
+
+    float processHandSphere(GameObject hand, bool left) {
+        float radius = hand.transform.localScale.x;
+        bool valueChanged = false;
+
+        if (OVRInput.Get(left ? OVRInput.RawButton.Y : OVRInput.RawButton.B)) {
+            valueChanged = true;
+            radius += HAND_SPHERE_STEP;
+        } else if (OVRInput.Get(left ? OVRInput.RawButton.X : OVRInput.RawButton.A)) {
+            valueChanged = true;
+            radius = Mathf.Max(0.1f, radius - HAND_SPHERE_STEP);
+        }
+
+        if (valueChanged) {
+            hand.SetActive(SHOW_SPHERES);
+            hand.transform.localScale = new Vector3(radius, radius, radius);
+        } else {
+            hand.SetActive(false);
+        }
+
+        return radius / 2.0f;
     }
 }
