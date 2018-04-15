@@ -18,11 +18,11 @@ public class PointAnimation : MonoBehaviour
     ComputeBuffer timesBuffer;
     ComputeBuffer handsBuffer;
 
-    float HOVER_SPEED = 0.01f;
+    float HOVER_SPEED = 0.003f;
     float BLACK_VOID = 4.0f;
-    float STARRY_NIGHT = 1.0f;
+    float STARRY_NIGHT = 2.0f;
     float HAND_SPHERE_STEP = 0.015f;
-    bool SHOW_SPHERES = false;
+    bool SHOW_SPHERES = true;
 
     struct Point {
         public Vector3 position;
@@ -56,7 +56,7 @@ public class PointAnimation : MonoBehaviour
 
         float scale = gameObject.transform.localScale.x;
         float scaleFactor = 1.0f / scale;
-        float explodingRange = scaleFactor * 15;
+        float explodingRange = scaleFactor * 25;
 
         if (pointBuffer == null || pointBuffer.count != sourceBuffer.count) {
             if (pointBuffer != null) {
@@ -77,7 +77,7 @@ public class PointAnimation : MonoBehaviour
             for (int i = 0; i < count;) {
                 // Generate random starting positions
                 startingPositions[i] = new Point {
-                    position = new Vector3(Random.Range(-explodingRange, explodingRange), Random.Range(-explodingRange, explodingRange), Random.Range(0, explodingRange * 2)),
+                    position = new Vector3(Random.Range(-explodingRange, explodingRange), Random.Range(0, explodingRange * 2), Random.Range(-explodingRange, explodingRange)),
                     color = 255
                 };
 
@@ -99,11 +99,13 @@ public class PointAnimation : MonoBehaviour
         // Get oculus touch input data
         float leftTrigger = OVRInput.Get(OVRInput.RawAxis1D.LHandTrigger);
         float rightTrigger = OVRInput.Get(OVRInput.RawAxis1D.RHandTrigger);
-        float leftForce = leftTrigger * 0.2f * scaleFactor;
-        float rightForce = rightTrigger * 0.2f * scaleFactor;
+        float leftHandRadius = processHandSphere(leftHandSphere, null, true);
+        float rightHandRadius = processHandSphere(rightHandSphere, null, false);
 
-        float leftHandRadius = processHandSphere(leftHandSphere, true);
-        float rightHandRadius = processHandSphere(rightHandSphere, false);
+        float maxLeftForce = map(leftHandRadius, 0.05f, 5.0f, 0.01f, 0.1f);
+        float maxRightForce = map(rightHandRadius, 0.05f, 5.0f, 0.01f, 0.2f);
+        float leftForce = leftTrigger * maxLeftForce * scaleFactor;
+        float rightForce = rightTrigger * maxRightForce * scaleFactor;
 
         // Compose hand data buffer
         Vector3 leftHandPosition = transform.InverseTransformPoint(leftHand.transform.position);
@@ -131,9 +133,20 @@ public class PointAnimation : MonoBehaviour
         GetComponent<PointCloudRenderer>().sourceBuffer = pointBuffer;
     }
 
-    float processHandSphere(GameObject hand, bool left) {
+    float map(float input, float inputStart, float inputEnd, float outputStart, float outputEnd) {
+        float output = outputStart + ((outputEnd - outputStart) / (inputEnd - inputStart)) * (input - inputStart);
+        return Mathf.Max(Mathf.Min(output, outputEnd), outputStart);    
+    }
+
+    float processHandSphere(GameObject hand, GameObject particles, bool left) {
         float radius = hand.transform.localScale.x;
         bool valueChanged = false;
+
+        if (particles != null) {
+            ParticleSystem particleSystem = particles.GetComponent<ParticleSystem>();
+            ParticleSystem.ShapeModule shapeModule = particleSystem.shape;
+            radius = shapeModule.radius;
+        }
 
         if (OVRInput.Get(left ? OVRInput.RawButton.Y : OVRInput.RawButton.B)) {
             valueChanged = true;
@@ -146,8 +159,19 @@ public class PointAnimation : MonoBehaviour
         if (valueChanged) {
             hand.SetActive(SHOW_SPHERES);
             hand.transform.localScale = new Vector3(radius, radius, radius);
+
+            if (particles != null) {
+                ParticleSystem particleSystem = particles.GetComponent<ParticleSystem>();
+                ParticleSystem.ShapeModule shapeModule = particleSystem.shape;
+                shapeModule.radius = radius;
+            }
+
         } else {
             hand.SetActive(false);
+        }
+
+        if (particles != null) {
+            return radius;
         }
 
         return radius / 2.0f;

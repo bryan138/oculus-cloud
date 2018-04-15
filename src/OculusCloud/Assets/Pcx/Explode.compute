@@ -50,23 +50,23 @@ void Main(uint id : SV_DispatchThreadID) {
 			// Steering behavior
 			float3 desired = target - position;
 			float magnitude = getMagnitude(desired);
-			float speed = 0.2;
+			float speed = 0.03;
 			if (effectiveTime < 1.5) {
 				// Bouncy ball of goodness not complete yet, small deacceleration
-				if (magnitude < 1) {
-					speed = (0.1 / 1) * magnitude;
+				if (magnitude < 0.15) {
+					speed =  (0.015 / 0.15) * magnitude;
 				}
 			} else {
 				// Deaccelerate incoming particles
-				if (magnitude < 6) {
-					speed = (0.07 / 5) * magnitude;
+				if (magnitude < 0.9) {
+					speed = (0.01 / 0.9) * magnitude;
 				}
 			}
 			desired *= (speed / magnitude);
 			float3 steer = desired - velocity;
 			float steerMagnitude = getMagnitude(steer);
-			if (steerMagnitude > 0.1) {
-				steer *= (0.01 / steerMagnitude);
+			if (steerMagnitude > 0.015) {
+				steer *= (0.0015 / steerMagnitude);
 			}
 			acceleration += steer;
 
@@ -78,8 +78,8 @@ void Main(uint id : SV_DispatchThreadID) {
 				desired *= (speed / magnitude);
 				steer = desired - velocity;
 				steerMagnitude = getMagnitude(steer);
-				if (steerMagnitude > 0.05) {
-					steer *= (0.05 / steerMagnitude);
+				if (steerMagnitude > 0.015) {
+					steer *= (0.015 / steerMagnitude);
 				}
 				acceleration += steer;
 			}
@@ -93,8 +93,8 @@ void Main(uint id : SV_DispatchThreadID) {
 				desired *= -1;
 				steer = desired - velocity;
 				steerMagnitude = getMagnitude(steer);
-				if (steerMagnitude > 0.05) {
-					steer *= (0.05 / steerMagnitude);
+				if (steerMagnitude > 0.015) {
+					steer *= (0.015 / steerMagnitude);
 				}
 				acceleration += steer;
 			}
@@ -110,6 +110,7 @@ void Main(uint id : SV_DispatchThreadID) {
 
 	// Position
 	newPoint.xyz = position + velocity;
+	newPoint.y = max(0, newPoint.y);
 	velocity += acceleration;
 
     OutputBuffer[id] = newPoint;
